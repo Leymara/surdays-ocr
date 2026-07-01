@@ -20,7 +20,7 @@ class MainWindow(QMainWindow):
         self.pdf = PDFManager()
 
         self.setWindowTitle("SURDAYS OCR")
-        self.resize(1200, 700)
+        self.resize(1300, 750)
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         ])
         menu.setMaximumWidth(220)
 
-        # ===== Zona principal =====
+        # ===== Zona derecha =====
         derecha = QVBoxLayout()
 
         titulo = QLabel("SURDAYS OCR")
@@ -46,13 +46,17 @@ class MainWindow(QMainWindow):
         self.boton_pdf = QPushButton("Seleccionar PDF")
         self.boton_pdf.clicked.connect(self.abrir_pdf)
 
-        self.info = QLabel(
-            "Seleccione un PDF para comenzar."
-        )
+        self.info = QLabel("Seleccione un PDF para comenzar.")
+
+        # Aquí mostraremos la primera página del PDF
+        self.preview = QLabel()
+        self.preview.setMinimumHeight(500)
+        self.preview.setMinimumWidth(400)
 
         derecha.addWidget(titulo)
         derecha.addWidget(self.boton_pdf)
         derecha.addWidget(self.info)
+        derecha.addWidget(self.preview)
         derecha.addStretch()
 
         layout.addWidget(menu)
@@ -73,17 +77,25 @@ class MainWindow(QMainWindow):
         datos = self.pdf.obtener_info(archivo)
 
         self.info.setText(
-            f"""
-Archivo:
-{datos["nombre"]}
+            f"""Archivo:
+{datos['nombre']}
 
 Páginas:
-{datos["paginas"]}
+{datos['paginas']}
 
 Tamaño:
-{datos["tamano_mb"]} MB
+{datos['tamano_mb']} MB
 
 Estado:
 ✅ PDF cargado correctamente
 """
+        )
+
+        imagen = self.pdf.obtener_primera_pagina(archivo)
+
+        self.preview.setPixmap(
+            imagen.scaled(
+                450,
+                600
+            )
         )
