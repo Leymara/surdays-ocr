@@ -7,9 +7,13 @@ from PySide6.QtWidgets import (
     QPushButton,
     QLabel,
     QFileDialog,
+    QMessageBox,
 )
 
+from PySide6.QtCore import Qt
+
 from core.pdf_manager import PDFManager
+from core.ocr_manager import OCRManager
 
 
 class MainWindow(QMainWindow):
@@ -18,6 +22,9 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.pdf = PDFManager()
+        self.ocr = OCRManager()
+
+        self.ruta_pdf = None
 
         self.setWindowTitle("SURDAYS OCR")
         self.resize(1300, 750)
@@ -27,17 +34,25 @@ class MainWindow(QMainWindow):
 
         layout = QHBoxLayout(central)
 
-        # ===== Menú lateral =====
+        # ==========================
+        # Menú lateral
+        # ==========================
+
         menu = QListWidget()
+
         menu.addItems([
             "📄 OCR PDF",
             "📊 Excel",
             "📁 CSV Gesfincas",
             "⚙ Configuración"
         ])
+
         menu.setMaximumWidth(220)
 
-        # ===== Zona derecha =====
+        # ==========================
+        # Zona principal
+        # ==========================
+
         derecha = QVBoxLayout()
 
         titulo = QLabel("SURDAYS OCR")
@@ -46,15 +61,18 @@ class MainWindow(QMainWindow):
         self.boton_pdf = QPushButton("Seleccionar PDF")
         self.boton_pdf.clicked.connect(self.abrir_pdf)
 
+        self.boton_ocr = QPushButton("Procesar OCR")
+        self.boton_ocr.clicked.connect(self.procesar_ocr)
+
         self.info = QLabel("Seleccione un PDF para comenzar.")
 
-        # Aquí mostraremos la primera página del PDF
         self.preview = QLabel()
-        self.preview.setMinimumHeight(500)
-        self.preview.setMinimumWidth(400)
+        self.preview.setAlignment(Qt.AlignCenter)
+        self.preview.setMinimumSize(500, 650)
 
         derecha.addWidget(titulo)
         derecha.addWidget(self.boton_pdf)
+        derecha.addWidget(self.boton_ocr)
         derecha.addWidget(self.info)
         derecha.addWidget(self.preview)
         derecha.addStretch()
@@ -73,6 +91,8 @@ class MainWindow(QMainWindow):
 
         if not archivo:
             return
+
+        self.ruta_pdf = archivo
 
         datos = self.pdf.obtener_info(archivo)
 
@@ -96,6 +116,28 @@ Estado:
         self.preview.setPixmap(
             imagen.scaled(
                 450,
-                600
+                600,
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
             )
+        )
+
+    def procesar_ocr(self):
+
+        if self.ruta_pdf is None:
+
+            QMessageBox.warning(
+                self,
+                "Aviso",
+                "Primero seleccione un PDF."
+            )
+
+            return
+
+        texto = self.ocr.leer_primera_pagina(self.ruta_pdf)
+
+        QMessageBox.information(
+            self,
+            "Resultado OCR",
+            texto[:3500]
         )
